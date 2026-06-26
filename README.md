@@ -10,7 +10,7 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Calcula delta de tempo acumulado ao longo da volta
 - Localiza pontos específicos no traçado da pista
 - Gera mapas de velocidade coloridos por trecho do circuito
-
+- Analisa instints e desgaste de pneu durante a corrida
 ## Tecnologias
 
 - Python
