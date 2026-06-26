@@ -13,6 +13,7 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Analisa instints e desgaste de pneu durante a corrida
 - Ranking completo do grid, comparando os tempos de volta
 - Calcula G longitudial de qualquer piloto em qualquer volta
+- Cálcula G lateral com adaptações 
 ## Tecnologias
 
 - Python
