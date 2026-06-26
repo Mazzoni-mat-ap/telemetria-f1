@@ -11,6 +11,7 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Localiza pontos específicos no traçado da pista
 - Gera mapas de velocidade coloridos por trecho do circuito
 - Analisa instints e desgaste de pneu durante a corrida
+- Ranking completo do grid, comparando os tempos de volta
 ## Tecnologias
 
 - Python
