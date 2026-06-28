@@ -342,3 +342,73 @@ def diagrama_gg(telemetria, titulo='Diagrama G-G'):
     plt.axis('equal')
     plt.grid(alpha=0.2)
     plt.show()
+
+
+def calcular_energia_frenagem(telemetria, massa_kg=768, duracao_minima_pontos=3):
+    """
+    Identifica zonas de frenagem na volta e calcula a energia cinética
+    dissipada em cada uma (em Joules e em kWh para referência).
+    
+    Filtra falsos positivos exigindo que a velocidade final seja
+    realmente menor que a inicial (evita ruído residual do G longitudinal).
+    """
+    dist, g_bruto, g_suave = calcular_g_longitudinal(telemetria)
+    
+    freando = g_suave < -0.3
+    mudancas = np.diff(freando.astype(int))
+    inicios = np.where(mudancas == 1)[0] + 1
+    fins = np.where(mudancas == -1)[0] + 1
+    
+    if freando[0]:
+        inicios = np.insert(inicios, 0, 0)
+    if freando[-1]:
+        fins = np.append(fins, len(freando) - 1)
+    
+    resultados = []
+    velocidade_ms = telemetria['Speed'].values / 3.6
+    distancia_full = telemetria['Distance'].values
+    
+    for ini, fim in zip(inicios, fins):
+        if fim - ini < duracao_minima_pontos:
+            continue
+        
+        v_inicial = velocidade_ms[ini]
+        v_final = velocidade_ms[fim]
+        
+        if v_final >= v_inicial:
+            continue
+        
+        energia_j = 0.5 * massa_kg * (v_inicial**2 - v_final**2)
+        
+        resultados.append({
+            'distancia_inicio': distancia_full[ini],
+            'distancia_fim': distancia_full[fim],
+            'v_inicial_kmh': v_inicial * 3.6,
+            'v_final_kmh': v_final * 3.6,
+            'energia_joules': energia_j,
+            'energia_kwh': energia_j / 3_600_000
+        })
+    
+    df_resultado = pd.DataFrame(resultados)
+    return df_resultado
+
+
+def mapa_energia_frenagem(telemetria, df_energia, titulo='Energia de frenagem por zona'):
+    """
+    Plota o traçado da pista com marcadores nas zonas de frenagem,
+    onde o tamanho do marcador é proporcional à energia dissipada.
+    """
+    plt.figure(figsize=(10, 8))
+    plt.plot(telemetria['X'], telemetria['Y'], color='gray', linewidth=2, alpha=0.4)
+    
+    for _, zona in df_energia.iterrows():
+        x_ini, y_ini = encontrar_ponto_na_pista(telemetria, zona['distancia_inicio'])
+        tamanho = zona['energia_kwh'] * 800
+        plt.scatter(x_ini, y_ini, s=tamanho, color='crimson', alpha=0.6, edgecolors='black')
+        plt.annotate(f"{zona['energia_kwh']:.2f} kWh", (x_ini, y_ini),
+                     textcoords="offset points", xytext=(10, 10), fontsize=8)
+    
+    plt.title(titulo)
+    plt.axis('equal')
+    plt.axis('off')
+    plt.show()

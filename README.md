@@ -15,6 +15,7 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Calcula G longitudinal de qualquer piloto em qualquer volta
 - Calcula G lateral (com limitações documentadas — ver Módulo 2)
 - Analisa o G-G diagram
+- Calcula energia de frenagem
 
 ## Tecnologias
 
