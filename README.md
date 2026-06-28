@@ -10,16 +10,28 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Calcula delta de tempo acumulado ao longo da volta
 - Localiza pontos específicos no traçado da pista
 - Gera mapas de velocidade coloridos por trecho do circuito
-- Analisa instints e desgaste de pneu durante a corrida
+- Analisa stints e desgaste de pneu durante a corrida
 - Ranking completo do grid, comparando os tempos de volta
-- Calcula G longitudial de qualquer piloto em qualquer volta
-- Cálcula G lateral com adaptações 
+- Calcula G longitudinal de qualquer piloto em qualquer volta
+- Calcula G lateral (com limitações documentadas — ver Módulo 2)
+
 ## Tecnologias
 
 - Python
 - [FastF1](https://github.com/theOehrly/Fast-F1) — dados oficiais de telemetria da F1
 - pandas / numpy
 - matplotlib
+
+## Estrutura do projeto
+
+\`\`\`
+telemetria-f1/
+├── funcoes_telemetria.py    # funções reutilizáveis (importadas pelos notebooks)
+├── notebooks/
+│   ├── modulo_01_comparador_voltas.ipynb
+│   └── modulo_02_dinamica.ipynb
+├── requirements.txt
+\`\`\`
 
 ## Como rodar
 
@@ -29,7 +41,7 @@ python -m venv .venv
 pip install -r requirements.txt
 \`\`\`
 
-Abra o notebook em `notebooks/` no VS Code ou Jupyter.
+Abra os notebooks em `notebooks/` no VS Code ou Jupyter.
 
 ## Status
 
