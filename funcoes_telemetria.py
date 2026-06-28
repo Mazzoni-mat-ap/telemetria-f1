@@ -317,3 +317,28 @@ def calcular_g_lateral(telemetria, janela_suavizacao=3):
     g_suave = pd.Series(g_lateral).rolling(window=janela_suavizacao, center=True, min_periods=1).mean().values
     
     return s, g_lateral, g_suave
+
+def diagrama_gg(telemetria, titulo='Diagrama G-G'):
+    """
+    Plota o diagrama G-G (G lateral vs G longitudinal) de uma volta,
+    mostrando o envelope de aderência explorado pelo piloto.
+    
+    NOTA: o G lateral aqui é uma aproximação (ver limitação documentada
+    em calcular_g_lateral). Use para comparação relativa entre pilotos.
+    """
+    dist_long, g_bruto_long, g_suave_long = calcular_g_longitudinal(telemetria)
+    dist_lat, g_bruto_lat, g_suave_lat = calcular_g_lateral(telemetria)
+    
+    g_lat_interp = np.interp(dist_long, dist_lat, g_suave_lat)
+    
+    plt.figure(figsize=(7, 7))
+    sc = plt.scatter(g_lat_interp, g_suave_long, c=dist_long, cmap='viridis', s=8, alpha=0.7)
+    plt.axhline(0, color='gray', linestyle='--', alpha=0.3)
+    plt.axvline(0, color='gray', linestyle='--', alpha=0.3)
+    plt.colorbar(sc, label='Distância (m)')
+    plt.xlabel('G lateral (aproximado)')
+    plt.ylabel('G longitudinal')
+    plt.title(titulo)
+    plt.axis('equal')
+    plt.grid(alpha=0.2)
+    plt.show()
