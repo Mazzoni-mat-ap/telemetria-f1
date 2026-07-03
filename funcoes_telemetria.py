@@ -412,3 +412,34 @@ def mapa_energia_frenagem(telemetria, df_energia, titulo='Energia de frenagem po
     plt.axis('equal')
     plt.axis('off')
     plt.show()
+
+
+def comparar_energia_frenagem(df1, df2, nome1, nome2, titulo='Comparação de energia de frenagem'):
+    """
+    compara a energia dissipada em frenagem entre dois pilotos,
+    mostrando barras lado a lado para cada zona de frenagem.
+    
+    
+    NOTA: as zonas de frenagem podem não coincidir exatamente entre pilotos,"""
+
+    zonas = pd.concat([df1[['distancia_inicio', 'energia_kwh']].rename(columns={'energia_kwh': nome1}),
+                       df2[['distancia_inicio', 'energia_kwh']].rename(columns={'energia_kwh': nome2})],
+                      axis=1)
+    
+    zonas = zonas.loc[:,~zonas.columns.duplicated()]
+    zonas = zonas.sort_values('distancia_inicio')
+    
+    x = np.arange(len(zonas))
+    largura = 0.35
+    
+    plt.figure(figsize=(12, 6))
+    plt.bar(x - largura/2, zonas[nome1], width=largura, label=nome1, color='orange')
+    plt.bar(x + largura/2, zonas[nome2], width=largura, label=nome2, color='blue')
+    
+    plt.xticks(x, [f"{d:.0f} m" for d in zonas['distancia_inicio']], rotation=45)
+    plt.ylabel('Energia dissipada (kWh)')
+    plt.title(titulo)
+    plt.legend()
+    plt.grid(alpha=0.2, axis='y')
+    plt.tight_layout()
+    plt.show()
