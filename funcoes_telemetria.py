@@ -8,6 +8,8 @@ import fastf1.plotting
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import logging
+logging.disable(logging.INFO)
 
 
 def comparar_pilotos(ano, gp, sessao, piloto1, piloto2):
@@ -443,3 +445,63 @@ def comparar_energia_frenagem(df1, df2, nome1, nome2, titulo='Comparação de en
     plt.grid(alpha=0.2, axis='y')
     plt.tight_layout()
     plt.show()
+
+
+def comparar_setores(ano, gp, sessao, piloto1, piloto2):
+    """
+    
+    Compara os tempos de setor da volta mais rápida de dois pilotos
+    numa sessão, mostrando onde cada um ganha ou perde tempo.
+    """
+    session = fastf1.get_session(ano, gp, sessao)
+    session.load()
+    
+    volta1 = session.laps.pick_driver(piloto1).pick_fastest()
+    volta2 = session.laps.pick_driver(piloto2).pick_fastest()
+    
+    setores = ['Sector1Time', 'Sector2Time', 'Sector3Time']
+    labels = ['Setor 1', 'Setor 2', 'Setor 3']
+    
+    tempos1 = [volta1[s].total_seconds() for s in setores]
+    tempos2 = [volta2[s].total_seconds() for s in setores]
+    
+    # Delta: positivo = piloto1 mais lento, negativo = piloto1 mais rápido
+    deltas = [t1 - t2 for t1, t2 in zip(tempos1, tempos2)]
+    cores = ['#0090FF' if d < 0 else '#FF8000' for d in deltas]
+    
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Gráfico 1: tempos absolutos por setor
+    x = np.arange(len(labels))
+    largura = 0.35
+    axes[0].bar(x - largura/2, tempos1, largura, label=piloto1, color='#0090FF', alpha=0.85)
+    axes[0].bar(x + largura/2, tempos2, largura, label=piloto2, color='#FF8000', alpha=0.85)
+    axes[0].set_xticks(x)
+    axes[0].set_xticklabels(labels)
+    axes[0].set_ylabel('Tempo (s)')
+    axes[0].set_title('Tempo por setor')
+    axes[0].legend()
+    axes[0].grid(alpha=0.2, axis='y')
+    
+    # Gráfico 2: delta por setor (piloto1 - piloto2)
+    axes[1].bar(labels, deltas, color=cores, alpha=0.85)
+    axes[1].axhline(0, color='gray', linestyle='--', alpha=0.5)
+    axes[1].set_ylabel(f'Delta (s) — negativo = {piloto1} mais rápido')
+    axes[1].set_title(f'Delta por setor: {piloto1} vs {piloto2}')
+    axes[1].grid(alpha=0.2, axis='y')
+    
+    fig.suptitle(f'{gp} {ano} {sessao} — Comparação de setores', fontweight='bold')
+    plt.tight_layout()
+    plt.show()
+    
+    # Imprime resumo textual também
+    print(f"\n{'Setor':<10} {piloto1:>10} {piloto2:>10} {'Delta':>10}")
+    print('-' * 42)
+    for label, t1, t2, d in zip(labels, tempos1, tempos2, deltas):
+        vencedor = '← mais rápido' if d < 0 else ('→ mais rápido' if d > 0 else 'empate')
+        print(f"{label:<10} {t1:>10.3f} {t2:>10.3f} {d:>+10.3f}  {vencedor}")
+    
+    total1 = sum(tempos1)
+    total2 = sum(tempos2)
+    print('-' * 42)
+    print(f"{'Total':<10} {total1:>10.3f} {total2:>10.3f} {total1-total2:>+10.3f}")

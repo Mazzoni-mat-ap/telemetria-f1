@@ -16,6 +16,7 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Calcula G lateral (com limitações documentadas — ver Módulo 2)
 - Analisa o G-G diagram
 - Calcula e compara energia de frenagem
+- Compara desempenho em setores da pista
 
 ## Análises feitas
 - Análise entre Russel e Verstappen no GP da Austria 2026, peimeiro GP pós criação do programa
