@@ -248,19 +248,18 @@ def ranking_sessao(ano, gp, sessao):
     cores_equipe = fastf1.plotting.get_driver_color_mapping(session=session)
     cores_barras = [cores_equipe.get(piloto, 'gray') for piloto in voltas_segundos.index]
     
-    plt.figure(figsize=(10, 8))
-    plt.barh(voltas_segundos.index, voltas_segundos.values, color=cores_barras)
-    plt.gca().invert_yaxis()
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.barh(voltas_segundos.index, voltas_segundos.values, color=cores_barras)
+    ax.invert_yaxis()
     
     margem = 0.3
-    plt.xlim(voltas_segundos.min() - margem, voltas_segundos.max() + margem)
+    ax.set_xlim(voltas_segundos.min() - margem, voltas_segundos.max() + margem)
+    ax.set_xlabel('Tempo de volta (s)')
+    ax.set_title(f'{gp} {ano} {sessao} — Classificação (volta mais rápida)')
+    ax.grid(alpha=0.2, axis='x')
     
-    plt.xlabel('Tempo de volta (s)')
-    plt.title(f'{gp} {ano} {sessao} — Classificação (volta mais rápida)')
-    plt.grid(alpha=0.2, axis='x')
-    plt.show()
-    
-    return voltas_rapidas
+    plt.tight_layout()
+    return fig
 
 
 def calcular_g_longitudinal(telemetria, dt_minimo=0.01, janela_suavizacao=5):
@@ -507,3 +506,88 @@ def comparar_setores(ano, gp, sessao, piloto1, piloto2):
     total2 = sum(tempos2)
     print('-' * 42)
     print(f"{'Total':<10} {total1:>10.3f} {total2:>10.3f} {total1-total2:>+10.3f}")
+
+
+def mapa_g_longitudinal(telemetria, titulo='Mapa G longitudinal'):
+    """
+    Plota o traçado da pista colorido pelo G longitudinal em cada ponto.
+    Vermelho = frenagem forte, verde = aceleração forte, amarelo = neutro.
+    """
+    from matplotlib.collections import LineCollection
+    from matplotlib.colors import Normalize
+    
+    dist_g, g_bruto, g_suave = calcular_g_longitudinal(telemetria)
+    
+    # Interpola as coordenadas X, Y nos mesmos pontos do G longitudinal
+    # (que tem tamanho ligeiramente diferente por causa do filtro de dt)
+    x_interp = np.interp(dist_g, telemetria['Distance'].values, telemetria['X'].values)
+    y_interp = np.interp(dist_g, telemetria['Distance'].values, telemetria['Y'].values)
+    
+    points = np.array([x_interp, y_interp]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    
+    # Escala simétrica em torno do zero
+    g_abs_max = np.abs(g_suave).max()
+    norm = Normalize(vmin=-g_abs_max, vmax=g_abs_max)
+    
+    fig, ax = plt.subplots(figsize=(10, 8))
+    lc = LineCollection(segments[:-1], cmap='RdYlGn', norm=norm)
+    lc.set_array(g_suave)
+    lc.set_linewidth(4)
+    
+    ax.add_collection(lc)
+    ax.set_xlim(x_interp.min() - 200, x_interp.max() + 200)
+    ax.set_ylim(y_interp.min() - 200, y_interp.max() + 200)
+    ax.axis('equal')
+    ax.axis('off')
+    ax.set_title(titulo)
+    
+    cbar = fig.colorbar(lc, ax=ax)
+    cbar.set_label('G longitudinal (negativo = frenagem, positivo = aceleração)')
+    
+    plt.show()
+
+def comparar_mapas_g_longitudinal(tel1, tel2, nome1, nome2, titulo_geral=''):
+    """
+    Plota dois mapas de G longitudinal lado a lado, na mesma escala de cor,
+    para comparação direta entre dois pilotos.
+    Vermelho = frenagem forte, verde = aceleração forte, amarelo = neutro.
+    """
+    from matplotlib.collections import LineCollection
+    from matplotlib.colors import Normalize
+    
+    def extrair_dados(telemetria):
+        dist_g, g_bruto, g_suave = calcular_g_longitudinal(telemetria)
+        x_interp = np.interp(dist_g, telemetria['Distance'].values, telemetria['X'].values)
+        y_interp = np.interp(dist_g, telemetria['Distance'].values, telemetria['Y'].values)
+        return x_interp, y_interp, g_suave
+    
+    x1, y1, g1 = extrair_dados(tel1)
+    x2, y2, g2 = extrair_dados(tel2)
+    
+    # Escala simétrica compartilhada entre os dois pilotos
+    g_abs_max = max(np.abs(g1).max(), np.abs(g2).max())
+    norm = Normalize(vmin=-g_abs_max, vmax=g_abs_max)
+    
+    fig, axes = plt.subplots(1, 2, figsize=(18, 8))
+    
+    for ax, x, y, g, nome in zip(axes, [x1, x2], [y1, y2], [g1, g2], [nome1, nome2]):
+        points = np.array([x, y]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        
+        lc = LineCollection(segments[:-1], cmap='RdYlGn', norm=norm)
+        lc.set_array(g)
+        lc.set_linewidth(4)
+        
+        ax.add_collection(lc)
+        ax.set_xlim(x.min() - 200, x.max() + 200)
+        ax.set_ylim(y.min() - 200, y.max() + 200)
+        ax.axis('equal')
+        ax.axis('off')
+        ax.set_title(nome)
+    
+    fig.suptitle(titulo_geral, fontsize=14, fontweight='bold')
+    cbar = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap='RdYlGn'), ax=axes, fraction=0.03)
+    cbar.set_label('G longitudinal (negativo = frenagem, positivo = aceleração)')
+    
+    plt.show()

@@ -18,6 +18,9 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Calcula e compara energia de frenagem
 - Compara desempenho em setores da pista
 
+## Projeto de criação da interface para o projeto iniciada
+- Arquivo app.py
+
 ## Análises feitas
 - Análise entre Russel e Verstappen no GP da Austria 2026, peimeiro GP pós criação do programa
 
