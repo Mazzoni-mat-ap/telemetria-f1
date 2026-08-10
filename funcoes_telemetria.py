@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import logging
-logging.disable(logging.INFO)
+import warnings
+logging.disable(logging.CRITICAL)
+warnings.filterwarnings('ignore')
 
 
 def comparar_pilotos(ano, gp, sessao, piloto1, piloto2):
