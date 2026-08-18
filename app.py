@@ -10,8 +10,8 @@ import fastf1
 
 from funcoes_telemetria import (
     comparar_pilotos, ranking_sessao, mapa_velocidade,
-    comparar_mapas_velocidade, calcular_g_longitudinal,
-    calcular_energia_frenagem, mapa_energia_frenagem
+    comparar_mapas_velocidade, calcular_energia_frenagem,
+    mapa_energia_frenagem
 )
 
 os.makedirs('cache', exist_ok=True)
@@ -32,7 +32,7 @@ aba1, aba2, aba3, aba4 = st.tabs(["Ranking", "Telemetria", "Mapa de Velocidade",
 if st.sidebar.button("Analisar"):
     session = fastf1.get_session(ano, gp, sessao)
     session.load()
-    
+
     volta1 = session.laps.pick_driver(piloto1).pick_fastest()
     volta2 = session.laps.pick_driver(piloto2).pick_fastest()
     tel1 = volta1.get_telemetry().add_distance()
@@ -40,24 +40,25 @@ if st.sidebar.button("Analisar"):
 
     with aba1:
         st.subheader(f"Ranking — {gp} {ano} {sessao}")
-        fig = ranking_sessao(ano, gp, sessao)
-        st.pyplot(fig)
+        fig_ranking = ranking_sessao(ano, gp, sessao)
+        st.pyplot(fig_ranking)
 
     with aba2:
         st.subheader(f"Telemetria — {piloto1} vs {piloto2}")
-        fig = comparar_pilotos(ano, gp, sessao, piloto1, piloto2)
-        st.pyplot(fig)
+        _, _, fig_tel, fig_delta = comparar_pilotos(ano, gp, sessao, piloto1, piloto2)
+        st.pyplot(fig_tel)
+        st.pyplot(fig_delta)
 
     with aba3:
         st.subheader(f"Mapas de velocidade — {piloto1} vs {piloto2}")
-        fig = comparar_mapas_velocidade(tel1, tel2, piloto1, piloto2, f"{gp} {ano}")
-        st.pyplot(fig)
+        fig_mapas = comparar_mapas_velocidade(tel1, tel2, piloto1, piloto2, f"{gp} {ano}")
+        st.pyplot(fig_mapas)
 
     with aba4:
         st.subheader(f"Energia de frenagem — {piloto1} vs {piloto2}")
         energia1 = calcular_energia_frenagem(tel1)
         energia2 = calcular_energia_frenagem(tel2)
-        
+
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(f"**{piloto1}**")
