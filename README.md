@@ -17,6 +17,8 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Analisa o G-G diagram
 - Calcula e compara energia de frenagem
 - Compara desempenho em setores da pista
+- Analisa e compara o uso do DRS pelos pilotos
+- Analisa RPM do motor
 
 ## Projeto de criação da interface para o programa iniciada
 - Arquivo app.py
