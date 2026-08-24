@@ -32,17 +32,6 @@ de entrada para a área de Performance Analysis no automobilismo.
 - pandas / numpy
 - matplotlib
 
-## Estrutura do projeto
-
-\`\`\`
-telemetria-f1/
-├── funcoes_telemetria.py    # funções reutilizáveis (importadas pelos notebooks)
-├── notebooks/
-│   ├── modulo_01_comparador_voltas.ipynb
-│   └── modulo_02_dinamica.ipynb
-├── requirements.txt
-\`\`\`
-
 ## Como rodar
 
 \`\`\`bash
