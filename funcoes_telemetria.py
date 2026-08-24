@@ -596,3 +596,80 @@ def comparar_mapas_g_longitudinal(tel1, tel2, nome1, nome2, titulo_geral=''):
 
     plt.tight_layout()
     return fig
+
+def analisar_drs(telemetria, titulo='Análise de DRS'):
+    """
+    Analisa a ativação do DRS ao longo de uma volta.
+    Plota o status do DRS pela distância e marca as zonas no mapa da pista.
+    Retorna fig.
+    """
+    distancia = telemetria['Distance'].values
+    drs = telemetria['DRS'].values
+    velocidade = telemetria['Speed'].values
+    x = telemetria['X'].values
+    y = telemetria['Y'].values
+
+    # DRS aberto = valores 12 ou 14
+    drs_aberto = drs >= 12
+
+    fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=False)
+
+    # Painel 1: velocidade com zonas de DRS destacadas
+    axes[0].plot(distancia, velocidade, color='#0090FF', linewidth=1.5)
+    axes[0].fill_between(distancia, 0, velocidade, where=drs_aberto,
+                         color='lime', alpha=0.3, label='DRS aberto')
+    axes[0].set_ylabel('Velocidade (km/h)')
+    axes[0].set_title('Velocidade com zonas de DRS')
+    axes[0].legend()
+    axes[0].grid(alpha=0.2)
+
+    # Painel 2: status DRS ao longo da volta
+    axes[1].plot(distancia, drs, color='gray', linewidth=1)
+    axes[1].fill_between(distancia, 0, drs, where=drs_aberto,
+                         color='lime', alpha=0.5, label='DRS aberto')
+    axes[1].set_ylabel('Canal DRS')
+    axes[1].set_xlabel('Distância (m)')
+    axes[1].legend()
+    axes[1].grid(alpha=0.2)
+
+    # Painel 3: mapa da pista colorido por DRS
+    axes[2].remove()  # remove o terceiro eixo pra criar um sem sharex
+    ax_mapa = fig.add_subplot(3, 1, 3)
+    ax_mapa.plot(x, y, color='gray', linewidth=2, alpha=0.3)
+    ax_mapa.scatter(x[~drs_aberto], y[~drs_aberto],
+                    c='#0090FF', s=8, label='DRS fechado', zorder=2)
+    ax_mapa.scatter(x[drs_aberto], y[drs_aberto],
+                    c='lime', s=12, label='DRS aberto', zorder=3)
+    ax_mapa.set_aspect('equal')
+    ax_mapa.axis('off')
+    ax_mapa.legend(loc='lower right')
+    ax_mapa.set_title('Mapa da pista — zonas de DRS')
+
+    fig.suptitle(titulo, fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    return fig
+
+def comparar_drs(tel1, tel2, nome1, nome2, titulo='Comparação de DRS'):
+    """
+    Compara a ativação do DRS entre dois pilotos na mesma volta.
+    Retorna fig.
+    """
+    fig, axes = plt.subplots(2, 1, figsize=(14, 7), sharex=True)
+
+    for ax, tel, nome, cor in zip(axes, [tel1, tel2], [nome1, nome2], ['#0090FF', '#FF8000']):
+        distancia = tel['Distance'].values
+        drs = tel['DRS'].values
+        velocidade = tel['Speed'].values
+        drs_aberto = drs >= 12
+
+        ax.plot(distancia, velocidade, color=cor, linewidth=1.5, label=nome)
+        ax.fill_between(distancia, 0, velocidade, where=drs_aberto,
+                        color='lime', alpha=0.3, label='DRS aberto')
+        ax.set_ylabel('Velocidade (km/h)')
+        ax.legend()
+        ax.grid(alpha=0.2)
+
+    axes[1].set_xlabel('Distância (m)')
+    fig.suptitle(titulo, fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    return fig
