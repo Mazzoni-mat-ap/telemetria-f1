@@ -673,3 +673,47 @@ def comparar_drs(tel1, tel2, nome1, nome2, titulo='Comparação de DRS'):
     fig.suptitle(titulo, fontsize=14, fontweight='bold')
     plt.tight_layout()
     return fig
+
+def analisar_rpm(telemetria, titulo='Análise de RPM'):
+    """
+    Analisa o RPM do motor ao longo de uma volta, combinado com
+    as marchas e a velocidade para identificar padrões de troca.
+    Retorna fig.
+    """
+    distancia = telemetria['Distance'].values
+    rpm = telemetria['RPM'].values
+    marcha = telemetria['nGear'].values
+    velocidade = telemetria['Speed'].values
+
+    fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
+
+    # Painel 1: velocidade
+    axes[0].plot(distancia, velocidade, color='#0090FF', linewidth=1.5)
+    axes[0].set_ylabel('Velocidade (km/h)')
+    axes[0].grid(alpha=0.2)
+
+    # Painel 2: RPM colorido por marcha
+    marchas_unicas = sorted(set(marcha))
+    cmap = plt.colormaps['RdYlGn'].resampled(len(marchas_unicas))
+    for i in range(len(distancia) - 1):
+        cor = cmap(marcha[i] - min(marchas_unicas))
+        axes[1].plot(distancia[i:i+2], rpm[i:i+2], color=cor, linewidth=1.5)
+
+    # Colorbar manual pras marchas
+    sm = plt.cm.ScalarMappable(cmap=cmap,
+         norm=plt.Normalize(vmin=min(marchas_unicas), vmax=max(marchas_unicas)))
+    sm.set_array([])
+    fig.colorbar(sm, ax=axes[1], label='Marcha', pad=0.01)
+    axes[1].set_ylabel('RPM')
+    axes[1].grid(alpha=0.2)
+
+    # Painel 3: marcha
+    axes[2].plot(distancia, marcha, color='#FF8000', linewidth=1.5, drawstyle='steps-post')
+    axes[2].set_ylabel('Marcha')
+    axes[2].set_xlabel('Distância (m)')
+    axes[2].set_yticks(marchas_unicas)
+    axes[2].grid(alpha=0.2)
+
+    fig.suptitle(titulo, fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    return fig
