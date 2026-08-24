@@ -18,7 +18,7 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Calcula e compara energia de frenagem
 - Compara desempenho em setores da pista
 
-## Projeto de criação da interface para o projeto iniciada
+## Projeto de criação da interface para o programa iniciada
 - Arquivo app.py
 
 ## Análises feitas
