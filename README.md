@@ -22,7 +22,8 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Arquivo app.py
 
 ## Análises feitas
-- Análise entre Russel e Verstappen no GP da Austria 2026, peimeiro GP pós criação do programa
+- Análise do GP da Austria 2026, peimeiro GP pós criação do programa
+- Análise do GP da Bélgica 2026
 
 ## Tecnologias
 
