@@ -831,3 +831,74 @@ def perfil_elevacao(telemetria, titulo='Perfil de Elevação'):
     fig.suptitle(titulo, fontsize=14, fontweight='bold')
     plt.tight_layout()
     return fig
+
+def painel_telemetria(telemetria, titulo='Painel Completo de Telemetria'):
+    """
+    Plota todos os canais disponíveis de telemetria numa visualização única,
+    alinhados pela distância percorrida.
+    Retorna fig.
+    """
+    distancia = telemetria['Distance'].values
+    velocidade = telemetria['Speed'].values
+    rpm = telemetria['RPM'].values
+    acelerador = telemetria['Throttle'].values
+    freio = telemetria['Brake'].values.astype(bool)
+    drs = telemetria['DRS'].values
+    marcha = telemetria['nGear'].values
+
+    drs_aberto = drs >= 12
+
+    fig, axes = plt.subplots(6, 1, figsize=(16, 14), sharex=True)
+    fig.subplots_adjust(hspace=0.05)
+
+    # Painel 1: Velocidade
+    axes[0].plot(distancia, velocidade, color='#0090FF', linewidth=1.5)
+    axes[0].fill_between(distancia, 0, velocidade, where=drs_aberto,
+                         color='lime', alpha=0.2, label='DRS aberto')
+    axes[0].set_ylabel('Vel.\n(km/h)', fontsize=8)
+    axes[0].legend(fontsize=7, loc='upper right')
+    axes[0].grid(alpha=0.15)
+
+    # Painel 2: RPM colorido por marcha
+    marchas_unicas = sorted(set(marcha))
+    cmap = plt.colormaps['RdYlGn'].resampled(len(marchas_unicas))
+    for i in range(len(distancia) - 1):
+        cor = cmap(marcha[i] - min(marchas_unicas))
+        axes[1].plot(distancia[i:i+2], rpm[i:i+2], color=cor, linewidth=1.5)
+    axes[1].set_ylabel('RPM', fontsize=8)
+    axes[1].grid(alpha=0.15)
+
+    # Painel 3: Acelerador
+    axes[2].plot(distancia, acelerador, color='green', linewidth=1.5)
+    axes[2].fill_between(distancia, 0, acelerador, color='green', alpha=0.2)
+    axes[2].set_ylabel('Acel.\n(%)', fontsize=8)
+    axes[2].set_ylim(-5, 105)
+    axes[2].grid(alpha=0.15)
+
+    # Painel 4: Freio
+    axes[3].fill_between(distancia, 0, freio.astype(int),
+                         color='red', alpha=0.7, step='post')
+    axes[3].set_ylabel('Freio', fontsize=8)
+    axes[3].set_ylim(-0.1, 1.5)
+    axes[3].set_yticks([0, 1])
+    axes[3].set_yticklabels(['Off', 'On'], fontsize=7)
+    axes[3].grid(alpha=0.15)
+
+    # Painel 5: DRS
+    axes[4].fill_between(distancia, 0, drs_aberto.astype(int),
+                         color='lime', alpha=0.7, step='post')
+    axes[4].set_ylabel('DRS', fontsize=8)
+    axes[4].set_ylim(-0.1, 1.5)
+    axes[4].set_yticks([0, 1])
+    axes[4].set_yticklabels(['Off', 'On'], fontsize=7)
+    axes[4].grid(alpha=0.15)
+
+    # Painel 6: Marcha
+    axes[5].plot(distancia, marcha, color='#FF8000', linewidth=1.5, drawstyle='steps-post')
+    axes[5].set_ylabel('Marcha', fontsize=8)
+    axes[5].set_yticks(marchas_unicas)
+    axes[5].set_xlabel('Distância (m)')
+    axes[5].grid(alpha=0.15)
+
+    fig.suptitle(titulo, fontsize=14, fontweight='bold')
+    return fig

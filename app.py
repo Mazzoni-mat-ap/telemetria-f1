@@ -15,7 +15,7 @@ from funcoes_telemetria import (
     diagrama_gg, calcular_energia_frenagem, mapa_energia_frenagem,
     comparar_energia_frenagem, comparar_setores, mapa_g_longitudinal,
     comparar_mapas_g_longitudinal, analisar_drs, comparar_drs,
-    analisar_rpm, analisar_brake, comparar_brake, perfil_elevacao
+    analisar_rpm, analisar_brake, comparar_brake, perfil_elevacao, painel_telemetria
 )
 
 os.makedirs('cache', exist_ok=True)
@@ -153,6 +153,15 @@ if analisar:
     elif secao == "🧠 Pilotagem e Performance":
         st.subheader(f"Pilotagem — {piloto1} vs {piloto2} — {gp} {ano} {sessao}")
         aba1, aba2, aba3, aba4 = st.tabs(["DRS", "RPM", "Frenagem", "Elevação"])
+
+        aba0, aba1, aba2, aba3, aba4 = st.tabs(["Painel Completo", "DRS", "RPM", "Frenagem", "Elevação"])
+
+        with aba0:
+             col1, col2 = st.columns(2)
+             with col1:
+                  st.pyplot(painel_telemetria(tel1, titulo=f'{piloto1} — Painel Completo'))
+             with col2:
+                  st.pyplot(painel_telemetria(tel2, titulo=f'{piloto2} — Painel Completo'))
 
         with aba1:
             col1, col2 = st.columns(2)
