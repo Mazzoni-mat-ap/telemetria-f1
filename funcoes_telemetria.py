@@ -780,3 +780,54 @@ def comparar_brake(tel1, tel2, nome1, nome2, titulo='Comparação de Frenagem'):
     fig.suptitle(titulo, fontsize=14, fontweight='bold')
     plt.tight_layout()
     return fig
+
+def perfil_elevacao(telemetria, titulo='Perfil de Elevação'):
+    """
+    Plota o perfil de elevação da pista ao longo de uma volta,
+    usando o canal Z da telemetria (convertido para metros reais).
+    Retorna fig.
+    """
+    distancia = telemetria['Distance'].values
+    z = telemetria['Z'].values / 10  # converte para metros reais
+
+    # Suaviza levemente pra remover ruído
+    z_suave = pd.Series(z).rolling(window=5, center=True, min_periods=1).mean().values
+
+    # Calcula inclinação (gradiente) em percentual
+    dz = np.gradient(z_suave, distancia)
+    inclinacao = np.clip(dz * 100, -20, 20)  # limita a ±20%
+
+    fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True)
+
+    # Painel 1: perfil de elevação
+    axes[0].plot(distancia, z_suave, color='#8B4513', linewidth=2)
+    axes[0].fill_between(distancia, z_suave.min(), z_suave, alpha=0.2, color='#8B4513')
+    axes[0].set_ylabel('Elevação (m)')
+    axes[0].set_title('Perfil de elevação')
+    axes[0].grid(alpha=0.2)
+
+    # Anota ponto mais alto e mais baixo
+    idx_max = np.argmax(z_suave)
+    idx_min = np.argmin(z_suave)
+    axes[0].annotate(f'↑ {z_suave[idx_max]:.1f}m',
+                     (distancia[idx_max], z_suave[idx_max]),
+                     textcoords='offset points', xytext=(0, 10), fontsize=9, color='green')
+    axes[0].annotate(f'↓ {z_suave[idx_min]:.1f}m',
+                     (distancia[idx_min], z_suave[idx_min]),
+                     textcoords='offset points', xytext=(0, -15), fontsize=9, color='red')
+
+    # Painel 2: inclinação
+    axes[1].plot(distancia, inclinacao, color='purple', linewidth=1.5)
+    axes[1].axhline(0, color='gray', linestyle='--', alpha=0.5)
+    axes[1].fill_between(distancia, 0, inclinacao, where=inclinacao > 0,
+                         color='green', alpha=0.3, label='Subida')
+    axes[1].fill_between(distancia, 0, inclinacao, where=inclinacao < 0,
+                         color='red', alpha=0.3, label='Descida')
+    axes[1].set_ylabel('Inclinação (%)')
+    axes[1].set_xlabel('Distância (m)')
+    axes[1].legend()
+    axes[1].grid(alpha=0.2)
+
+    fig.suptitle(titulo, fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    return fig
