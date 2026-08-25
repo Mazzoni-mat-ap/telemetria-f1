@@ -717,3 +717,66 @@ def analisar_rpm(telemetria, titulo='Análise de RPM'):
     fig.suptitle(titulo, fontsize=14, fontweight='bold')
     plt.tight_layout()
     return fig
+
+def analisar_brake(telemetria, titulo='Análise de Frenagem'):
+    """
+    Analisa os pontos e zonas de frenagem ao longo de uma volta,
+    combinando o canal Brake com velocidade e distância.
+    Retorna fig.
+    """
+    distancia = telemetria['Distance'].values
+    brake = telemetria['Brake'].values.astype(bool)
+    velocidade = telemetria['Speed'].values
+    x = telemetria['X'].values
+    y = telemetria['Y'].values
+
+    fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=False)
+
+    # Painel 1: velocidade com zonas de frenagem destacadas
+    axes[0].plot(distancia, velocidade, color='#0090FF', linewidth=1.5)
+    axes[0].fill_between(distancia, 0, velocidade, where=brake,
+                         color='red', alpha=0.3, label='Freio aplicado')
+    axes[0].set_ylabel('Velocidade (km/h)')
+    axes[0].set_xlabel('Distância (m)')
+    axes[0].set_title('Velocidade com zonas de frenagem')
+    axes[0].legend()
+    axes[0].grid(alpha=0.2)
+
+    # Painel 2: mapa da pista colorido por frenagem
+    axes[1].remove()
+    ax_mapa = fig.add_subplot(2, 1, 2)
+    ax_mapa.plot(x, y, color='gray', linewidth=2, alpha=0.3)
+    ax_mapa.scatter(x[~brake], y[~brake], c='#0090FF', s=8, label='Acelerando', zorder=2)
+    ax_mapa.scatter(x[brake], y[brake], c='red', s=12, label='Freio aplicado', zorder=3)
+    ax_mapa.set_aspect('equal')
+    ax_mapa.axis('off')
+    ax_mapa.legend(loc='lower right')
+    ax_mapa.set_title('Mapa da pista — zonas de frenagem')
+
+    fig.suptitle(titulo, fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    return fig
+
+def comparar_brake(tel1, tel2, nome1, nome2, titulo='Comparação de Frenagem'):
+    """
+    Compara os pontos e zonas de frenagem entre dois pilotos.
+    Retorna fig.
+    """
+    fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True)
+
+    for ax, tel, nome, cor in zip(axes, [tel1, tel2], [nome1, nome2], ['#0090FF', '#FF8000']):
+        distancia = tel['Distance'].values
+        brake = tel['Brake'].values.astype(bool)
+        velocidade = tel['Speed'].values
+
+        ax.plot(distancia, velocidade, color=cor, linewidth=1.5, label=nome)
+        ax.fill_between(distancia, 0, velocidade, where=brake,
+                        color='red', alpha=0.3, label='Freio aplicado')
+        ax.set_ylabel('Velocidade (km/h)')
+        ax.legend()
+        ax.grid(alpha=0.2)
+
+    axes[1].set_xlabel('Distância (m)')
+    fig.suptitle(titulo, fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    return fig
