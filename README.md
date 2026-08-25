@@ -19,6 +19,7 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Compara desempenho em setores da pista
 - Analisa e compara o uso do DRS pelos pilotos
 - Analisa RPM do motor
+- Analisa e compara o brake
 
 ## Projeto de criação da interface para o programa iniciada
 - Arquivo app.py
