@@ -29,6 +29,11 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Perfil de elevação da pista (canal Z)
 - Painel completo de telemetria com todos os canais numa visualização só
 
+### Módulo 4 - Análise de Traçado e Limites Físicos
+- Mapas de circuito da pista com precisão
+- Mapas com análise do raio de curvatura
+- Análise velocidade teórica
+
 ### Interface Web (Streamlit)
 - App interativo com todas as análises acessíveis via navegador
 - Seleção de ano, GP, sessão e pilotos pela sidebar

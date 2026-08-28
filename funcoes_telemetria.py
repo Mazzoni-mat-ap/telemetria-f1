@@ -902,3 +902,182 @@ def painel_telemetria(telemetria, titulo='Painel Completo de Telemetria'):
 
     fig.suptitle(titulo, fontsize=14, fontweight='bold')
     return fig
+
+def plotar_tracado_basico(telemetria, piloto_nome):
+    """
+    Plota o traçado bruto da pista usando as coordenadas X e Y do GPS da telemetria f1.
+    """
+    # Extraindo as coordenadas cartesianas da telemetria
+    x = telemetria['X']
+    y = telemetria['Y']
+    
+    fig, ax = plt.subplots(figsize=(8, 8))
+    
+    ax.plot(x, y, color='cyan', linewidth=2, label=f'Traçado - {piloto_nome}')
+    
+    ax.set_aspect('equal')
+    
+    # Formatação do gráfico
+    ax.set_title(f'Linha de Corrida Bruta (Coordenadas X, Y) - {piloto_nome}')
+    ax.set_xlabel('Coordenada X (metros)')
+    ax.set_ylabel('Coordenada Y (metros)')
+    ax.grid(True, linestyle='--', alpha=0.6)
+    ax.legend()
+    
+    return fig
+
+def plotar_tracado_suavizado(telemetria, piloto_nome, window=51, poly=3):
+    """
+    Aplica o filtro de Savitzky-Golay para suavizar as coordenadas X e Y.
+    Esta é a preparação matemática (remoção de ruído) para derivar o traçado.
+    """
+    from scipy.signal import savgol_filter
+    
+    x = telemetria['X'].values
+    y = telemetria['Y'].values
+    
+    # O pulo do gato matemático: suavização polinomial
+    x_suave = savgol_filter(x, window_length=window, polyorder=poly)
+    y_suave = savgol_filter(y, window_length=window, polyorder=poly)
+    
+    fig, ax = plt.subplots(figsize=(10, 10))
+    
+    # Plotando o bruto no fundo e o suave na frente pra comparar
+    ax.plot(x, y, color='gray', linewidth=2, alpha=0.6, label='Bruto (com ruído do GPS)')
+    ax.plot(x_suave, y_suave, color='magenta', linewidth=1.5, label='Suavizado (Savitzky-Golay)')
+    
+    ax.set_aspect('equal')
+    ax.set_title(f'Filtro Matemático de Traçado - {piloto_nome}', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Coordenada X (m)')
+    ax.set_ylabel('Coordenada Y (m)')
+    ax.grid(True, linestyle='--', alpha=0.3)
+    ax.legend()
+    
+    plt.tight_layout()
+    return fig
+
+def plotar_raio_curvatura(telemetria, piloto_nome, window=15, poly=3):
+    """
+    Calcula o raio de curvatura do traçado usando derivadas de 1ª e 2ª ordem.
+    Gera um mapa da pista destacando as curvas mais fechadas.
+    """
+    from scipy.signal import savgol_filter
+    from matplotlib.collections import LineCollection
+    from matplotlib.colors import Normalize
+    import numpy as np
+    
+    # CONVERSÃO DE UNIDADES: decímetros para metros
+    x = telemetria['X'].values / 10
+    y = telemetria['Y'].values / 10
+    
+    # 1. Filtro Matemático
+    x_suave = savgol_filter(x, window_length=window, polyorder=poly)
+    y_suave = savgol_filter(y, window_length=window, polyorder=poly)
+    
+    # 2. Aplicando Cálculo Diferencial
+    dx = np.gradient(x_suave)
+    dy = np.gradient(y_suave)
+    
+    ddx = np.gradient(dx)
+    ddy = np.gradient(dy)
+    
+    # 3. Calculando a Curvatura (k)
+    numerador = np.abs(dx * ddy - dy * ddx)
+    denominador = (dx**2 + dy**2)**1.5
+    
+    # Evitar divisão por zero nas retas
+    denominador = np.where(denominador == 0, 1e-10, denominador)
+    k = numerador / denominador
+    
+    # 4. Raio de Curvatura (R = 1/k)
+    raio = 1 / (k + 1e-10)
+    # Focando nas curvas reais (raio até 150 metros) para ter mais contraste
+    raio_plot = np.clip(raio, 0, 150) 
+    
+    # 5. Criando o Mapa de Calor
+    points = np.array([x_suave, y_suave]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    
+    norm = Normalize(vmin=0, vmax=150)
+    lc = LineCollection(segments, cmap='magma_r', norm=norm)
+    lc.set_array(raio_plot)
+    lc.set_linewidth(4)
+    
+    ax.add_collection(lc)
+    ax.set_xlim(x_suave.min() - 200, x_suave.max() + 200)
+    ax.set_ylim(y_suave.min() - 200, y_suave.max() + 200)
+    ax.set_aspect('equal')
+    ax.axis('off') 
+    
+    ax.set_title(f'Mapa Geométrico: Raio de Curvatura - {piloto_nome}', fontsize=14, fontweight='bold')
+    
+    cbar = fig.colorbar(lc, ax=ax, fraction=0.03, pad=0.04)
+    cbar.set_label('Raio da Curva (m) - Retas limitadas a 150m')
+    
+    plt.tight_layout()
+    return fig
+
+def plotar_velocidade_teorica(telemetria, piloto_nome, g_max=4.5, window=15, poly=3):
+    """
+    Calcula a velocidade máxima teórica baseada no raio da curva e no limite de Força G lateral.
+    Compara com a velocidade real do piloto ao longo da distância da volta.
+    """
+    from scipy.signal import savgol_filter
+    import numpy as np
+    import matplotlib.pyplot as plt
+    
+    # 1. Preparação dos dados (em metros)
+    x = telemetria['X'].values / 10
+    y = telemetria['Y'].values / 10
+    distancia = telemetria['Distance'].values
+    v_real = telemetria['Speed'].values
+    
+    # 2. Geometria (Filtro e Derivadas)
+    x_suave = savgol_filter(x, window_length=window, polyorder=poly)
+    y_suave = savgol_filter(y, window_length=window, polyorder=poly)
+    
+    dx = np.gradient(x_suave)
+    dy = np.gradient(y_suave)
+    ddx = np.gradient(dx)
+    ddy = np.gradient(dy)
+    
+    numerador = np.abs(dx * ddy - dy * ddx)
+    denominador = (dx**2 + dy**2)**1.5
+    denominador = np.where(denominador == 0, 1e-10, denominador)
+    
+    k = numerador / denominador
+    raio = 1 / (k + 1e-10)
+    
+    # 3. Física: Velocidade Teórica (v = sqrt(G * g * R))
+    gravidade = 9.81
+    # Multiplicamos por 3.6 para converter de m/s para km/h
+    v_teorica_ms = np.sqrt(g_max * gravidade * raio)
+    v_teorica_kmh = v_teorica_ms * 3.6
+    
+    # Nas retas, o raio é gigante e a velocidade teórica explode. 
+    # Limitamos à velocidade máxima real do carro (ex: 340 km/h) para o gráfico não distorcer.
+    v_teorica_kmh = np.clip(v_teorica_kmh, 0, 340)
+    
+    # 4. Plotagem
+    fig, ax = plt.subplots(figsize=(14, 6))
+    
+    ax.plot(distancia, v_teorica_kmh, color='orange', linestyle='--', linewidth=2, label=f'Velocidade Teórica Limite ({g_max} G)')
+    ax.plot(distancia, v_real, color='#0090FF', linewidth=2, label=f'Velocidade Real - {piloto_nome}')
+    
+    # Preencher a área entre as duas linhas nas curvas fechadas para mostrar o "potencial não usado"
+    # Focamos em velocidades menores que 250 km/h para não sujar as retas
+    mascara_curvas = v_teorica_kmh < 250
+    ax.fill_between(distancia, v_real, v_teorica_kmh, where=(v_teorica_kmh > v_real) & mascara_curvas, 
+                    color='red', alpha=0.2, label='Margem de Aderência (Tempo a ganhar)')
+    
+    ax.set_title(f'Análise de Limite de Aderência - {piloto_nome}', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Distância Percorrida (m)')
+    ax.set_ylabel('Velocidade (km/h)')
+    ax.set_ylim(50, 350)
+    ax.legend(loc='lower right')
+    ax.grid(True, linestyle='--', alpha=0.5)
+    
+    plt.tight_layout()
+    return fig
