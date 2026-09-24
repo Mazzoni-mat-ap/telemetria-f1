@@ -71,4 +71,4 @@ Abra os notebooks em `notebooks/` no VS Code ou Jupyter.
 
 ## Status
 
-🚧 Em desenvolvimento — projeto contínuo ao longo da graduação.
+❌ Projeto paralizado
