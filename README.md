@@ -30,12 +30,13 @@ de entrada para a área de Performance Analysis no automobilismo.
 - Painel completo de telemetria com todos os canais numa visualização só
 
 ### Módulo 4 - Análise de Traçado e Limites Físicos
+- Disponível no notebook `notebooks/MODULO4.ipynb`
 - Mapas de circuito da pista com precisão
 - Mapas com análise do raio de curvatura
 - Análise velocidade teórica
 
 ### Interface Web (Streamlit)
-- App interativo com todas as análises acessíveis via navegador
+- App interativo com as análises dos Módulos 1, 2 e 3 acessíveis via navegador
 - Seleção de ano, GP, sessão e pilotos pela sidebar
 - 5 seções: Ranking, Comparação de Pilotos, Dinâmica do Carro,
   Estratégia de Corrida e Pilotagem e Performance

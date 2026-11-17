@@ -47,18 +47,20 @@ analisar = st.sidebar.button("▶️ Analisar", use_container_width=True)
 
 if analisar:
     with st.spinner("Carregando dados..."):
-        session = fastf1.get_session(ano, gp, sessao)
-        session.load()
+        if secao != "🔄 Estratégia de Corrida":
+            session = fastf1.get_session(ano, gp, sessao)
+            session.load()
 
-        volta1 = session.laps.pick_driver(piloto1).pick_fastest()
-        volta2 = session.laps.pick_driver(piloto2).pick_fastest()
-        tel1 = volta1.get_telemetry().add_distance()
-        tel2 = volta2.get_telemetry().add_distance()
+            if secao != "🏆 Ranking":
+                volta1 = session.laps.pick_driver(piloto1).pick_fastest()
+                volta2 = session.laps.pick_driver(piloto2).pick_fastest()
+                tel1 = volta1.get_telemetry().add_distance()
+                tel2 = volta2.get_telemetry().add_distance()
 
     # --- Ranking ---
     if secao == "🏆 Ranking":
         st.subheader(f"Ranking — {gp} {ano} {sessao}")
-        fig = ranking_sessao(ano, gp, sessao)
+        fig = ranking_sessao(ano, gp, sessao, session=session)
         st.pyplot(fig)
 
     # --- Comparação de Pilotos ---
@@ -67,12 +69,16 @@ if analisar:
         aba1, aba2, aba3 = st.tabs(["Telemetria", "Setores", "Mapas de Velocidade"])
 
         with aba1:
-            _, _, fig_tel, fig_delta = comparar_pilotos(ano, gp, sessao, piloto1, piloto2)
+            _, _, fig_tel, fig_delta = comparar_pilotos(
+                ano, gp, sessao, piloto1, piloto2, session=session
+            )
             st.pyplot(fig_tel)
             st.pyplot(fig_delta)
 
         with aba2:
-            fig_set = comparar_setores(ano, gp, sessao, piloto1, piloto2)
+            fig_set = comparar_setores(
+                ano, gp, sessao, piloto1, piloto2, session=session
+            )
             st.pyplot(fig_set)
 
         with aba3:
@@ -152,8 +158,6 @@ if analisar:
     # --- Pilotagem e Performance ---
     elif secao == "🧠 Pilotagem e Performance":
         st.subheader(f"Pilotagem — {piloto1} vs {piloto2} — {gp} {ano} {sessao}")
-        aba1, aba2, aba3, aba4 = st.tabs(["DRS", "RPM", "Frenagem", "Elevação"])
-
         aba0, aba1, aba2, aba3, aba4 = st.tabs(["Painel Completo", "DRS", "RPM", "Frenagem", "Elevação"])
 
         with aba0:
