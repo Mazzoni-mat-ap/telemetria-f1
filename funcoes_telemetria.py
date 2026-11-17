@@ -14,14 +14,15 @@ logging.disable(logging.CRITICAL)
 warnings.filterwarnings('ignore')
 
 
-def comparar_pilotos(ano, gp, sessao, piloto1, piloto2):
+def comparar_pilotos(ano, gp, sessao, piloto1, piloto2, session=None):
     """
     Compara a telemetria de dois pilotos numa sessão específica.
     Plota velocidade, acelerador, marcha (3 painéis) e delta de tempo.
     Retorna (tel1, tel2, fig_telemetria, fig_delta).
     """
-    session = fastf1.get_session(ano, gp, sessao)
-    session.load()
+    if session is None:
+        session = fastf1.get_session(ano, gp, sessao)
+        session.load()
 
     volta1 = session.laps.pick_driver(piloto1).pick_fastest()
     volta2 = session.laps.pick_driver(piloto2).pick_fastest()
@@ -242,14 +243,15 @@ def comparar_stints(voltas1, voltas2, nome1, nome2, titulo=''):
     return fig
 
 
-def ranking_sessao(ano, gp, sessao):
+def ranking_sessao(ano, gp, sessao, session=None):
     """
     Mostra o ranking de todos os pilotos pela volta mais rápida
     numa sessão específica, colorido pela cor da equipe.
     Retorna fig.
     """
-    session = fastf1.get_session(ano, gp, sessao)
-    session.load()
+    if session is None:
+        session = fastf1.get_session(ano, gp, sessao)
+        session.load()
 
     voltas_rapidas = session.laps.groupby('Driver')['LapTime'].min().sort_values()
     voltas_segundos = voltas_rapidas.dt.total_seconds()
@@ -381,8 +383,10 @@ def calcular_energia_frenagem(telemetria, massa_kg=768, duracao_minima_pontos=3)
         fins = np.append(fins, len(freando) - 1)
 
     resultados = []
-    velocidade_ms = telemetria['Speed'].values / 3.6
     distancia_full = telemetria['Distance'].values
+    velocidade_ms = np.interp(
+        dist, distancia_full, telemetria['Speed'].values / 3.6
+    )
 
     for ini, fim in zip(inicios, fins):
         if fim - ini < duracao_minima_pontos:
@@ -397,8 +401,8 @@ def calcular_energia_frenagem(telemetria, massa_kg=768, duracao_minima_pontos=3)
         energia_j = 0.5 * massa_kg * (v_inicial**2 - v_final**2)
 
         resultados.append({
-            'distancia_inicio': distancia_full[ini],
-            'distancia_fim': distancia_full[fim],
+            'distancia_inicio': dist[ini],
+            'distancia_fim': dist[fim],
             'v_inicial_kmh': v_inicial * 3.6,
             'v_final_kmh': v_final * 3.6,
             'energia_joules': energia_j,
@@ -466,14 +470,15 @@ def comparar_energia_frenagem(df1, df2, nome1, nome2, titulo='Comparação de en
     return fig
 
 
-def comparar_setores(ano, gp, sessao, piloto1, piloto2):
+def comparar_setores(ano, gp, sessao, piloto1, piloto2, session=None):
     """
     Compara os tempos de setor da volta mais rápida de dois pilotos
     numa sessão, mostrando onde cada um ganha ou perde tempo.
     Retorna fig.
     """
-    session = fastf1.get_session(ano, gp, sessao)
-    session.load()
+    if session is None:
+        session = fastf1.get_session(ano, gp, sessao)
+        session.load()
 
     volta1 = session.laps.pick_driver(piloto1).pick_fastest()
     volta2 = session.laps.pick_driver(piloto2).pick_fastest()
@@ -533,8 +538,8 @@ def mapa_g_longitudinal(telemetria, titulo='Mapa G longitudinal'):
     norm = Normalize(vmin=-g_abs_max, vmax=g_abs_max)
 
     fig, ax = plt.subplots(figsize=(10, 8))
-    lc = LineCollection(segments[:-1], cmap='RdYlGn', norm=norm)
-    lc.set_array(g_suave)
+    lc = LineCollection(segments, cmap='RdYlGn', norm=norm)
+    lc.set_array((g_suave[:-1] + g_suave[1:]) / 2)
     lc.set_linewidth(4)
 
     ax.add_collection(lc)
@@ -579,8 +584,8 @@ def comparar_mapas_g_longitudinal(tel1, tel2, nome1, nome2, titulo_geral=''):
         points = np.array([x, y]).T.reshape(-1, 1, 2)
         segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
-        lc = LineCollection(segments[:-1], cmap='RdYlGn', norm=norm)
-        lc.set_array(g)
+        lc = LineCollection(segments, cmap='RdYlGn', norm=norm)
+        lc.set_array((g[:-1] + g[1:]) / 2)
         lc.set_linewidth(4)
 
         ax.add_collection(lc)
